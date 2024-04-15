@@ -1,13 +1,14 @@
 document.getElementById('populateButton').addEventListener('click', () => {
+    console.log("executing...");
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.scripting.executeScript({
             target: { tabId: tabs[0].id },
-            function: populateInputs,
+            function: populateInputs
         });
     });
 });
 
-function populateInputs() {
+async function populateInputs() {
 
     //TODO
     //1.fix input length - done
@@ -22,10 +23,14 @@ function populateInputs() {
     let number;
     let character;
     let salts = [];
+
+    const currentTabDomain = window.location.hostname;
+    var sha256HashedDomain = "";
+    let fixedLengthAdder = "msifjxowumqhysap"; //Default random 16 characters words
     const lowercaseChars = [];
     const uppercaseChars = [];
     const numberChars = [];
-    const specialChars = [];
+    const specialChars = ['!', '@', '$', '%', '^', '&', '*', '+', '#'];
 
     function init() {
 
@@ -44,27 +49,36 @@ function populateInputs() {
             numberChars.push(String.fromCharCode(i));
         }
 
-        // Special characters in order of ASCII number
-        for (let i = 33; i <= 47; i++) {
-            specialChars.push(String.fromCharCode(i));
-        }
-        for (let i = 58; i <= 64; i++) {
-            specialChars.push(String.fromCharCode(i));
-        }
-        for (let i = 91; i <= 96; i++) {
-            specialChars.push(String.fromCharCode(i));
-        }
-        for (let i = 123; i <= 126; i++) {
-            specialChars.push(String.fromCharCode(i));
-        }
+        // Special characters without order
+        // Since some of the characters are not allowed, thus it is defined manually
 
     }
-    
+
     init();
 
-    function salting() {
-        
-    }
+    //Start hashing and assign values to salt
+    //Here will asign value to hashed domain and salts array
+    let newInputString = currentTabDomain.replace("www.", "");
+    newInputString = newInputString.replace(".", "");
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(currentTabDomain);
+    const buffer = await crypto.subtle.digest('SHA-256', data);
+
+    //Convert the ArrayBuffer to a hexadecimal string
+    sha256HashedDomain = Array.from(new Uint8Array(buffer))
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+
+    console.log('SHA-256 Hash:', sha256HashedDomain);
+    //Length is 64
+    console.log('lenght:', sha256HashedDomain.length);
+
+    //Store into salts
+    salts[0] = sha256HashedDomain.substring(0, sha256HashedDomain.length / 4);
+    salts[1] = sha256HashedDomain.substring(sha256HashedDomain.length / 4, sha256HashedDomain.length / 2);
+    salts[2] = sha256HashedDomain.substring(sha256HashedDomain.length / 2, sha256HashedDomain.length * 3 / 4);
+    salts[3] = sha256HashedDomain.substring(sha256HashedDomain.length * 3 / 4, sha256HashedDomain.length);
 
     function fix_length(inputString) {
         //This function fix the input string length to 16
@@ -72,18 +86,21 @@ function populateInputs() {
 
         if (inputString.length < 16) {
             for (let counter = 16 - inputString.length; counter > 0; counter--) {
-                newInputString += "0";
+                newInputString += fixedLengthAdder[counter];
+                console.log("fix_length | newInputString: ", newInputString);
             }
-            console.log(newInputString.length);
+            console.log("fix_length | newInputString | add | done: ", newInputString);
             return newInputString;
         }
 
         if (inputString.length > 16) {
             const first8Chars = inputString.slice(0, 8);
             const last8Chars = inputString.slice(-8);
+            console.log("fix_length | newInputString | substract | done: ", newInputString);
             return first8Chars + last8Chars;
         }
 
+        console.log("fix_length | newInputString | fulfilled | done: ", newInputString);
         return inputString;
     }
 
@@ -99,100 +116,113 @@ function populateInputs() {
         return concatenatedHex;
     }
 
-    function enc_to_(inputString, letterList, salt) {
-        //TODO: use salt to randomize the selected list
-        //TODO: add option for user
-        let newInputString = to_hex(inputString);
+    function enc_to_(inputString, letterList, section) {
+        // TODO: use salt (16 hexadecimal) to randomize the selected list
+        // TODO: add option for user
+
+        // input string will be converted into 16 digits string
+        // too long then cut off
+        // too short then add trailing zeros
+
+        let substringHead = 32;
+        let divider = 13;
+
+        inputString = to_hex(fix_length(inputString));
+        console.log("enc_to() | inputString:", inputString);
+        console.log("enc_to() | sha256HashedDomain:", sha256HashedDomain);
+        let salt = 0;
+        switch (section) {
+            case 1:
+                console.log("enc_to() | section 1");
+                console.log("enc_to() | substring 1:", sha256HashedDomain.substring(0, 16));
+                salt = parseInt(sha256HashedDomain.substring(substringHead, substringHead + 4), 16) & divider;
+                console.log("enc_to() | substring 1:", salt);
+                break;
+            case 2:
+                console.log("enc_to() | section 2");
+                console.log("enc_to() | substring 2:", sha256HashedDomain.substring(16, 32));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 4, substringHead + 8), 16) & divider;
+                console.log("enc_to() | substring 1:", salt);
+                break;
+            case 3:
+                console.log("enc_to() | section 3");
+                console.log("enc_to() | substring 3:", sha256HashedDomain.substring(32, 48));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 8, substringHead + 12), 16) & divider;
+                console.log("enc_to() | substring 1:", salt);
+                break;
+            case 4:
+                console.log("enc_to() | section 4");
+                console.log("enc_to() | substring 4:", sha256HashedDomain.substring(48, 64));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 12, substringHead + 16), 16) & divider
+                console.log("enc_to() | substring 1:", salt);
+                break;
+            default:
+                console.log("enc_to() | error");
+                break;
+        }
+
         let result = "";
+
         for (let i = 0; i < 4; i++) {
-            let left = newInputString[i];
-            let right = newInputString[newInputString.length - i - 1];
+            let left = inputString[i];
+            let right = inputString[inputString.length - i - 1];
 
-            console.log(parseInt(left, 16).toString() + parseInt(right, 16).toString());
+            console.log("enc_to() | Combining: ", parseInt(left, 16).toString() + parseInt(right, 16).toString());
+
             let newHex = (parseInt(left, 16).toString() + parseInt(right, 16).toString()).valueOf();
-            let remain = newHex % letterList.length;
+            // let remain = (newHex.valueOf() + salts[i - 1].valueOf()) % letterList.length;
+            let remain = (newHex.valueOf() + parseInt(salts[section - 1], 16)) % letterList.length;
 
-            console.log("Adding lowercase = ", letterList[remain]);
-            
+            if (result.includes(letterList[remain])) {
+                console.log("enc_to() | repeated");
+                remain = (newHex.valueOf() + parseInt(salts[section - 1], 16) + salt++) % letterList.length;
+
+            }
+
+            console.log("enc_to() | salts: ", parseInt(salts[section - 1], 16));
+            console.log("enc_to() | remain: ", remain);
+            console.log("enc_to() | Adding character: ", letterList[remain]);
+
             result += letterList[remain];
         }
-        console.log("Result is ", result);
+        console.log("enc_to():", result);
         return result;
     }
 
-    function lwr(inputString) {
-        return enc_to_(inputString, lowercaseChars, salts[0]);
-    }
+    function enc(pwd) {
+        console.log("enc(pwd):start");
+        console.log("enc(pwd) | sha256HashedDomain:", sha256HashedDomain);
+        console.log("enc(pwd) | pwd:", pwd);
 
-    function upr(inputString) {
-        return enc_to_(inputString, uppercaseChars, salts[1]);
-    }
-
-    function nmr(inputString) {
-        return enc_to_(inputString, numberChars, salts[2]);
-    }
-
-    function chr(inputString) {
-        return enc_to_(inputString, specialChars, salts[3]);
-    }
-
-    function enc(pwd, salt) {
         pwd = fix_length(pwd);
-        
-        lower = lwr(pwd.substring(0, 4)).toString();
-        upper = upr(pwd.substring(4, 8)).toString();
-        number = nmr(pwd.substring(8, 12)).toString();
-        character = chr(pwd.substring(12, 16)).toString();
+
+        console.log("enc(pwd) | pwd.substring(0, 4):", pwd.substring(0, 4));
+        lower = enc_to_(pwd.substring(0, 4), lowercaseChars, 1).toString();
+
+        console.log("enc(pwd) | pwd.substring(4, 8):", pwd.substring(4, 8));
+        upper = enc_to_(pwd.substring(4, 8), uppercaseChars, 2).toString();
+
+        console.log("enc(pwd) | pwd.substring(8, 12):", pwd.substring(8, 12));
+        number = enc_to_(pwd.substring(8, 12), numberChars, 3).toString();
+
+        console.log("enc(pwd) | pwd.substring(12, 16):", pwd.substring(12, 16));
+        character = enc_to_(pwd.substring(12, 16), specialChars, 4).toString();
 
         //pwd is fixed, salt is hashed
+        console.log("enc(pwd) | Lower:", lower);
+        console.log("enc(pwd) | Upper:", upper);
+        console.log("enc(pwd) | Number:", number);
+        console.log("enc(pwd) | Character:", character);
 
+        console.log("enc(pwd):end");
         return lower + upper + number + character;
     }
 
-    async function sha256Hash(inputString) {
-        let newInputString = inputString.replace("www.","");
-        newInputString = newInputString.replace(".","");
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(inputString);
-        const buffer = await crypto.subtle.digest('SHA-256', data);
-      
-        // Convert the ArrayBuffer to a hexadecimal string
-        const sha256Hash = Array.from(new Uint8Array(buffer))
-          .map(byte => byte.toString(16).padStart(2, '0'))
-          .join('');
-      
-        console.log('SHA-256 Hash:', sha256Hash);
-        //length is 64
-        console.log('lenght:', sha256Hash.length);
-        
-        //Store into salts
-        salts[0] = sha256Hash.substring(0, sha256Hash.length/4);
-        salts[1] = sha256Hash.substring(sha256Hash.length/4, sha256Hash.length/2);
-        salts[2] = sha256Hash.substring(sha256Hash.length/2, sha256Hash.length*3/4);
-        salts[3] = sha256Hash.substring(sha256Hash.length*3/4, sha256Hash.length);
-
-        // console.log("1st quarter", salts[0]);
-        // console.log("2nd quarter", salts[1]);
-        // console.log("3rd quarter", salts[2]);
-        // console.log("4th quarter", salts[3]);
-
-
-        return sha256Hash;
-      
-    }
-
-    //This get the domain name
-    const currentTabDomain = window.location.hostname;
-    let hashedDomain = sha256Hash(currentTabDomain);
     //This find the location of all password input field
-    const inputFields = document.querySelectorAll('input[type="text"]');
-    
-    // const inputFields = document.querySelectorAll('input[type="email"]');
+
+    const inputFields = document.querySelectorAll('input[type="password"]');
 
     inputFields.forEach((input) => {
-        
-        input.value = enc(input.value, hashedDomain);
-
+        input.value = enc(input.value);
     });
 }
