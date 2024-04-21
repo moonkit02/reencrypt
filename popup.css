@@ -4,7 +4,7 @@ body {
     font-family: "Public Pixel";
     font-size: 6;
     width: 400px;
-    height: 550px;
+    height: 250px;
 }
 
 button {
@@ -18,6 +18,10 @@ button {
     transition: filter 250ms;
     user-select: none;
     touch-action: manipulation;
+}
+
+.titleText {
+    padding-bottom: 60px;
 }
 
 .shadow {
@@ -50,7 +54,7 @@ button {
 .front {
     display: block;
     position: relative;
-    padding: 12px 27px;
+    padding: 30px 120px;
     border-radius: 12px;
     font-size: 1.1rem;
     color: white;
@@ -87,3 +91,6 @@ button:active .shadow {
 button:focus:not(:focus-visible) {
     outline: none;
 }
+
+
+

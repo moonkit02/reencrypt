@@ -10,14 +10,6 @@ document.getElementById('populateButton').addEventListener('click', () => {
 
 async function populateInputs() {
 
-    //TODO
-    //1.fix input length - done
-    //2.get salt from domain name - done
-    //3.split the input into 4 matrix - 
-    //4.enc the 4 matrix using salt
-    //5.design a enc function, that can turn any number into desired character type
-    //eg. 2342546 is seed, whats the output in lowercase
-
     let lower;
     let upper;
     let number;
@@ -71,6 +63,7 @@ async function populateInputs() {
         .join('');
 
     console.log('SHA-256 Hash:', sha256HashedDomain);
+
     //Length is 64
     console.log('lenght:', sha256HashedDomain.length);
 
@@ -83,6 +76,12 @@ async function populateInputs() {
     function fix_length(inputString) {
         //This function fix the input string length to 16
         let newInputString = inputString;
+
+        console.log("fixedLengthAdder size |" + fixedLengthAdder.length);
+        if (fixedLengthAdder.length < 16) {
+            alert("Wordlist for fixed length adder is not long enough, please ensure it is atleast 16 characters long");
+            exit;
+        }
 
         if (inputString.length < 16) {
             for (let counter = 16 - inputString.length; counter > 0; counter--) {
@@ -117,12 +116,6 @@ async function populateInputs() {
     }
 
     function enc_to_(inputString, letterList, section) {
-        // TODO: use salt (16 hexadecimal) to randomize the selected list
-        // TODO: add option for user
-
-        // input string will be converted into 16 digits string
-        // too long then cut off
-        // too short then add trailing zeros
 
         let substringHead = 32;
         let divider = 13;
@@ -130,36 +123,39 @@ async function populateInputs() {
         inputString = to_hex(fix_length(inputString));
         console.log("enc_to() | inputString:", inputString);
         console.log("enc_to() | sha256HashedDomain:", sha256HashedDomain);
+
         let salt = 0;
         switch (section) {
             case 1:
                 console.log("enc_to() | section 1");
-                console.log("enc_to() | substring 1:", sha256HashedDomain.substring(0, 16));
-                salt = parseInt(sha256HashedDomain.substring(substringHead, substringHead + 4), 16) & divider;
+                console.log("enc_to() | substring 1:", sha256HashedDomain.substring(substringHead, substringHead + 4));
+                salt = parseInt(sha256HashedDomain.substring(substringHead, substringHead + 4)) & divider;
                 console.log("enc_to() | substring 1:", salt);
                 break;
             case 2:
                 console.log("enc_to() | section 2");
-                console.log("enc_to() | substring 2:", sha256HashedDomain.substring(16, 32));
-                salt = parseInt(sha256HashedDomain.substring(substringHead + 4, substringHead + 8), 16) & divider;
+                console.log("enc_to() | substring 2:", sha256HashedDomain.substring(substringHead + 4, substringHead + 8));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 4, substringHead + 8)) & divider;
                 console.log("enc_to() | substring 1:", salt);
                 break;
             case 3:
                 console.log("enc_to() | section 3");
-                console.log("enc_to() | substring 3:", sha256HashedDomain.substring(32, 48));
-                salt = parseInt(sha256HashedDomain.substring(substringHead + 8, substringHead + 12), 16) & divider;
+                console.log("enc_to() | substring 3:", sha256HashedDomain.substring(substringHead + 8, substringHead + 12));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 8, substringHead + 12)) & divider;
                 console.log("enc_to() | substring 1:", salt);
                 break;
             case 4:
                 console.log("enc_to() | section 4");
-                console.log("enc_to() | substring 4:", sha256HashedDomain.substring(48, 64));
-                salt = parseInt(sha256HashedDomain.substring(substringHead + 12, substringHead + 16), 16) & divider
+                console.log("enc_to() | substring 4:", sha256HashedDomain.substring(substringHead + 12, substringHead + 16));
+                salt = parseInt(sha256HashedDomain.substring(substringHead + 12, substringHead + 16)) & divider;
                 console.log("enc_to() | substring 1:", salt);
                 break;
             default:
                 console.log("enc_to() | error");
                 break;
         }
+
+        console.log("enc_to() | salt", salt);
 
         let result = "";
 
@@ -222,7 +218,20 @@ async function populateInputs() {
 
     const inputFields = document.querySelectorAll('input[type="password"]');
 
+    if (inputFields.length < 1) {
+        alert("No password field is detected!!!");
+        exit;
+    }
+
     inputFields.forEach((input) => {
+
+        if(input.value == ""){
+            alert("One of the input field is empty, at least input something before proceed to encrypt it.");
+            exit;
+        }
         input.value = enc(input.value);
+
     });
+
+    alert("Encrypted successfully, please proceed to manually type something then remove it from the password field. ");
 }
