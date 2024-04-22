@@ -1,14 +1,19 @@
+@font-face {
+    font-family: PIXEL;
+    src: url('PublicPixel.ttf');
+}
+
 body {
     background-color: black;
     color: white;
-    font-family: "Public Pixel";
+    font-family: PIXEL;
     font-size: 6;
     width: 400px;
     height: 250px;
 }
 
 button {
-    font-family: "Public Pixel";
+    font-family: Public Pixel;
     position: relative;
     border: none;
     background: transparent;
