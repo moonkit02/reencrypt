@@ -6,9 +6,9 @@ Feel free to try it!
 
 1. Head to the link below, click on the green "Code" button, then download zip
     
-  or you can do it in a programmer way
+    or you can do it in a programmer way
 
-  "git clone https://github.com/moonkit02/reencrypt"
+    "git clone https://github.com/moonkit02/reencrypt"
 
 2. For those download zip, after extract it, go to chrome
 3. Click puzzle button at the top right, then select "Manage Extension"
