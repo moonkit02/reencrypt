@@ -1,6 +1,6 @@
 WELCOME TO RE:NCRYPT
 
-This is my final year project, which is a very ligth web extension (only for chrome based browser user).
+This is my final year project, which is a very light web extension (only for chrome based browser user).
 Feel free to try it!
 
 
