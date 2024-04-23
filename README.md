@@ -3,7 +3,13 @@ WELCOME TO RE:NCRYPT
 This is my final year project, which is a very light web extension (only for chrome based browser user).
 Feel free to try it!
 
+What it does
+Are you having difficulty in remembering complicated password, and having hard time to create them for each website? Do you always wished for only memorizing one password for all website?
 
+RE:ncyrpt will help you to turn your simple password into a strong password. For example, "ezpwd" is the password that u memorize. BUT onviously it is very weak, so by using RE:ncrypt, for every website you go, you just simply type in "ezpwd" then encrypt it using the RE:ncrypt. It will ensure you to have unique, strong password for every website.
+
+
+Installation!!!
 1. Head to the link below, click on the green "Code" button, then download zip
     
     or you can do it in a programmer way
